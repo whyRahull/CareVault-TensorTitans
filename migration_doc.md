@@ -53,23 +53,24 @@ To resolve these bottlenecks, we are moving to a **Microservice-Based Architectu
 This diagram shows the structural separation of concerns across the new microservice architecture.
 
 ```mermaid
-architecture-beta
-    group AWS(Cloud Provider Web Space)
-    
-    service client(internet)[React Web Client] in AWS
-    service gateway(server)[Nginx Reverse Proxy] in AWS
-    service wsgi(server)[Django GUI API] in AWS
-    service asgi(server)[Django Channels / Daphne] in AWS
-    service redis(database)[Redis Pub/Sub] in AWS
-    service ml(server)[FastAPI ML Inference] in AWS
-    service pg(database)[PostgreSQL] in AWS
+flowchart LR
+    subgraph AWS [Cloud Provider Web Space]
+        direction LR
+        Client([React Web Client])
+        Gateway[Nginx Reverse Proxy]
+        WSGI[Django REST API]
+        ASGI[Django Channels / Daphne]
+        Redis[(Redis Pub/Sub)]
+        ML[FastAPI ML Inference]
+        PG[(PostgreSQL)]
 
-    client:R --> L:gateway
-    gateway:R --> L:wsgi
-    gateway:R --> L:asgi
-    asgi:R --> L:redis
-    asgi:B --> T:ml
-    wsgi:B --> T:pg
+        Client --> Gateway
+        Gateway --> WSGI
+        Gateway --> ASGI
+        ASGI --> Redis
+        ASGI --> ML
+        WSGI --> PG
+    end
 ```
 
 #### 3.2.2 System Diagram
