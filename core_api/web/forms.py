@@ -2,6 +2,9 @@ from django import forms
 from users.models import CustomUser
 from api.models import Organisation, OrgRegistrationToken, Incident, MissingPerson, CameraStream
 
+class TailwindToggleWidget(forms.CheckboxInput):
+    template_name = 'web/widgets/tailwind_toggle.html'
+
 class CameraStreamForm(forms.ModelForm):
     class Meta:
         model = CameraStream
@@ -11,12 +14,13 @@ class CameraStreamForm(forms.ModelForm):
                 'placeholder': 'rtsp://admin:password@192.168.1.100:554/stream1',
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
             }),
+            'is_active': TailwindToggleWidget(attrs={'class': 'sr-only peer'})
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
-            if field != 'stream_url':
+            if field not in ['stream_url', 'is_active']:
                 self.fields[field].widget.attrs.update({'class': 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'})
 from django.contrib.auth import authenticate
 

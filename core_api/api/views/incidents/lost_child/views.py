@@ -1,18 +1,8 @@
 import requests
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from api.models.incidents import MLServiceConfig, MissingPerson
-
-class LostChildDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'incidents/dashboard_lostchild.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['missing_persons'] = MissingPerson.objects.filter(is_found=False)
-        return context
 
 class LostChildImageSearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]

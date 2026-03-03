@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load static %}
 
 {% block title %}Lost Child Dash - CareVault{% endblock %}
 
@@ -96,21 +97,71 @@
         {% endfor %}
     </div>
 
-    <!-- Live Grid Simulation -->
-    <div class="bg-gray-900 rounded-3xl p-8 overflow-hidden relative">
-        <h2 class="text-white font-bold text-xl mb-6">Global Camera Biometrics</h2>
-        <div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 opacity-40">
-            {% for i in "1234567890123456" %}
-            <div class="aspect-square bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden relative">
-                <div class="absolute inset-0 border-2 border-indigo-500/20"></div>
-                <div class="w-full h-[1px] bg-indigo-500/20 absolute top-1/2"></div>
-                <div class="h-full w-[1px] bg-indigo-500/20 absolute left-1/2"></div>
+    <!-- Live Camera Biometric Scan -->
+    <div class="bg-gray-900 rounded-3xl p-8 overflow-hidden">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-white font-bold text-xl">Live Camera Biometric Scan</h2>
+            <div class="flex items-center gap-3">
+                <label class="text-gray-400 text-xs font-bold uppercase tracking-wider">Target:</label>
+                <select id="person-selector"
+                    class="bg-gray-800 text-white text-sm rounded-lg px-4 py-2 border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[200px]">
+                    <option value="">— All Faces (detect only) —</option>
+                    {% for person in missing_persons %}
+                    <option value="{{ person.pk }}">{{ person.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            {% endfor %}
         </div>
-        <div class="absolute inset-0 flex items-center justify-center bg-gray-900/40 backdrop-blur-[2px]">
-            <p class="text-indigo-400 font-mono text-xs uppercase tracking-[0.3em] font-black">Scanning Campus Grid...
-            </p>
+
+        <div class="aspect-video bg-black rounded-2xl relative overflow-hidden border-2 border-indigo-500/20">
+            <video id="lc-video" class="hidden w-full h-full object-cover" playsinline muted autoplay></video>
+            <img id="lc-annotated" class="hidden absolute inset-0 w-full h-full object-cover z-0" />
+            <canvas id="lc-canvas" class="hidden"></canvas>
+
+            <div class="absolute inset-0 flex items-center justify-center" id="lc-placeholder">
+                <div class="text-center">
+                    <svg class="w-16 h-16 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <p class="text-gray-500 font-mono text-xs uppercase tracking-widest mb-4">Awaiting Biometric
+                        Feed...</p>
+                    <button onclick="startLCCamera()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-xl">
+                        START LOCAL CAMERA
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status overlays -->
+            <div class="absolute top-4 left-4 flex gap-2 z-10">
+                <span id="lc-status"
+                    class="bg-gray-600 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest">
+                    OFFLINE
+                </span>
+                <span id="lc-fps"
+                    class="bg-white/10 backdrop-blur-md text-white/80 px-3 py-1 rounded-md text-xs font-mono border border-white/10 uppercase hidden">
+                    FPS: --
+                </span>
+            </div>
+
+            <!-- Match alert overlay -->
+            <div id="lc-match-overlay"
+                class="absolute inset-0 border-8 border-green-500 hidden pointer-events-none z-20">
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white px-8 py-4 rounded-2xl font-black text-3xl shadow-2xl">
+                    MATCH FOUND
+                </div>
+            </div>
+
+            <!-- Face detected info bar -->
+            <div id="lc-info-bar" class="absolute bottom-4 left-4 right-4 z-10 hidden">
+                <div id="lc-info-badge"
+                    class="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-lg border border-white/10 inline-block">
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -168,82 +219,10 @@
     </div>
 </div>
 
+<!-- External JS Logic -->
 <script>
-    let currentPersonId = null;
-
-    function openSearchModal(id, name) {
-        currentPersonId = id;
-        document.getElementById('search-person-id').value = id;
-        document.getElementById('modal-person-name').innerText = name;
-        document.getElementById('search-modal').classList.remove('hidden');
-        document.getElementById('search-modal').classList.add('flex');
-        document.getElementById('search-results').classList.add('hidden');
-        document.getElementById('file-label').innerText = 'Select capture for matching';
-    }
-
-    function closeSearchModal() {
-        document.getElementById('search-modal').classList.add('hidden');
-        document.getElementById('search-modal').classList.remove('flex');
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const searchForm = document.getElementById('search-form');
-        const searchImage = document.getElementById('search-image');
-        const fileLabel = document.getElementById('file-label');
-        const resultsDiv = document.getElementById('search-results');
-        const badge = document.getElementById('search-badge');
-        const msg = document.getElementById('search-msg');
-        const thumb = document.getElementById('search-thumb');
-
-        searchImage.addEventListener('change', e => {
-            if (e.target.files.length) fileLabel.innerText = e.target.files[0].name;
-        });
-
-        searchForm.addEventListener('submit', async e => {
-            e.preventDefault();
-            const file = searchImage.files[0];
-            const personId = document.getElementById('search-person-id').value;
-            if (!file) return;
-
-            const btn = searchForm.querySelector('button');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = 'CALIBRATING & MATCHING...';
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('person_id', personId);
-
-            try {
-                const resp = await fetch('{% url "api:lostchild-search" %}', {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                    body: formData
-                });
-                const data = await resp.json();
-
-                resultsDiv.classList.remove('hidden');
-                if (data.matched) {
-                    badge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase mb-4 inline-block bg-green-100 text-green-700';
-                    badge.innerText = `Matched (${data.confidence})`;
-                } else {
-                    badge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase mb-4 inline-block bg-red-100 text-red-700';
-                    badge.innerText = `No Match (${data.confidence})`;
-                }
-                msg.innerText = data.message;
-                if (data.annotated_image_b64) {
-                    thumb.classList.remove('hidden');
-                    thumb.querySelector('img').src = `data:image/jpeg;base64,${data.annotated_image_b64}`;
-                } else {
-                    thumb.classList.add('hidden');
-                }
-            } catch (err) {
-                alert('Search failed: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        });
-    });
+    window.CSRF_TOKEN = '{{ csrf_token }}';
+    window.API_LOST_CHILD_SEARCH = '{% url "api:lostchild-search" %}';
 </script>
+<script src="{% static 'web/js/lost_child.js' %}"></script>
 {% endblock %}

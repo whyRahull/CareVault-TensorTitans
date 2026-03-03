@@ -1,13 +1,8 @@
 import requests
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from api.models.incidents import MLServiceConfig
-
-class HandSOSDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'incidents/dashboard_handsos.html'
 
 class HandSOSImageDetectView(APIView):
     permission_classes = [permissions.IsAuthenticated]

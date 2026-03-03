@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load static %}
 
 {% block title %}Violence Detection Dashboard - CareVault{% endblock %}
 
@@ -45,7 +46,6 @@
         <div
             class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/10 text-xs font-mono space-y-1 z-10">
             <p class="text-green-400" id="fps-display">FPS: --</p>
-            <p class="text-green-400">MODEL: YOLOV8-VIOLENCE-V2</p>
             <div id="alert-status" class="hidden text-red-500 font-black animate-pulse">VIOLENCE DETECTED</div>
         </div>
     </div>
@@ -53,26 +53,27 @@
     <!-- Stats & Alerts -->
     <div class="space-y-6">
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Detection Metrics</h3>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Threat Level</span>
-                    <span class="text-green-600 font-bold">LOW</span>
-                </div>
-                <div class="w-full bg-gray-100 rounded-full h-2">
-                    <div class="bg-green-500 h-2 rounded-full" style="width: 15%"></div>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Active Sensors</span>
-                    <span class="font-bold">12 / 12</span>
-                </div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Recent Detections</h3>
+                <a href="{% url 'web:incidents' %}" class="text-xs text-indigo-600 font-bold hover:underline">View
+                    All</a>
             </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Detections</h3>
-            <div class="space-y-4 text-sm">
-                <p class="text-gray-500 italic text-center py-4">No critical incidents in the last 24h.</p>
+            <div class="space-y-4 text-sm" id="recent-detections-list">
+                {% for incident in recent_incidents %}
+                <div
+                    class="flex justify-between items-center p-3 {% if incident.severity == 'critical' %}bg-red-50 border-l-4 border-red-500{% elif incident.severity == 'high' %}bg-orange-50 border-l-4 border-orange-500{% else %}bg-gray-50 border-l-4 border-gray-400{% endif %} rounded hover:bg-gray-100 transition-colors">
+                    <div>
+                        <p class="font-bold text-gray-900">{{ incident.camera_room|default:"Unknown Camera" }}</p>
+                        <p class="text-[10px] text-gray-500">{{ incident.detected_at|date:"M d, Y H:i:s" }}</p>
+                    </div>
+                    <span
+                        class="text-[10px] font-black uppercase {% if incident.severity == 'critical' %}text-red-700{% elif incident.severity == 'high' %}text-orange-700{% else %}text-gray-600{% endif %}">
+                        {{ incident.severity }}</span>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic text-center py-4 text-xs" id="no-incidents-msg">No recent violence
+                    incidents recorded.</p>
+                {% endfor %}
             </div>
         </div>
 
@@ -131,123 +132,10 @@
     </div>
 </div>
 
+<!-- External JS Logic -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('video-upload-form');
-        const fileInput = document.getElementById('video-file');
-        const fileName = document.getElementById('file-name');
-        const resultsDiv = document.getElementById('analysis-results');
-        const resultBadge = document.getElementById('result-badge');
-        const resultMsg = document.getElementById('result-msg');
-        const resultThumb = document.getElementById('result-thumb');
-
-        fileInput.addEventListener('change', e => {
-            if (e.target.files.length) fileName.innerText = e.target.files[0].name.toUpperCase();
-        });
-
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const btn = form.querySelector('button');
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> ANALYSING...`;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const resp = await fetch('{% url "api:violence-detect" %}', {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                    body: formData
-                });
-                const data = await resp.json();
-
-                resultsDiv.classList.remove('hidden');
-                if (data.suspicious_detected) {
-                    resultBadge.className = 'px-2 py-1 rounded text-[10px] font-black uppercase mb-3 inline-block bg-red-500 text-white';
-                    resultBadge.innerText = 'CRITICAL ALERT';
-                } else {
-                    resultBadge.className = 'px-2 py-1 rounded text-[10px] font-black uppercase mb-3 inline-block bg-green-500 text-white';
-                    resultBadge.innerText = 'NO THREAT';
-                }
-                resultMsg.innerText = data.message;
-                if (data.thumbnail_b64) {
-                    resultThumb.classList.remove('hidden');
-                    resultThumb.querySelector('img').src = `data:image/jpeg;base64,${data.thumbnail_b64}`;
-                } else {
-                    resultThumb.classList.add('hidden');
-                }
-            } catch (err) {
-                alert('Analysis failed: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-            }
-        });
-        const video = document.getElementById('local-video');
-        const canvas = document.getElementById('stream-canvas');
-        const placeholder = document.getElementById('connection-placeholder');
-        const fpsDisplay = document.getElementById('fps-display');
-        const alertStatus = document.getElementById('alert-status');
-
-        window.startLocalStream = function () {
-            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false })
-                .then(stream => {
-                    video.srcObject = stream;
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        video.classList.remove('hidden');
-                        placeholder.classList.add('hidden');
-                        initStreamWebSocket();
-                    };
-                })
-                .catch(err => alert("Camera error: " + err.message));
-        };
-
-        function initStreamWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/ml/stream/violence/`);
-
-            ws.onopen = () => {
-                const context = canvas.getContext('2d');
-                canvas.width = 640;
-                canvas.height = 480;
-
-                setInterval(() => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        const base64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                        ws.send(JSON.stringify({ frame_b64: base64 }));
-                    }
-                }, 400); // ~2.5 FPS
-            };
-
-            ws.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                const result = data.result;
-
-                if (result.suspicious_detected) {
-                    alertStatus.classList.remove('hidden');
-                    document.querySelector('.lg\\:col-span-2').classList.add('border-red-600', 'animate-pulse');
-                } else {
-                    alertStatus.classList.add('hidden');
-                    document.querySelector('.lg\\:col-span-2').classList.remove('border-red-600', 'animate-pulse');
-                }
-
-                if (result.thumbnail_b64) {
-                    const annotatedFeed = document.getElementById('annotated-feed');
-                    annotatedFeed.src = `data:image/jpeg;base64,${result.thumbnail_b64}`;
-                    annotatedFeed.classList.remove('hidden');
-                    video.classList.add('opacity-0'); // Hide raw video to show annotation
-                }
-
-                fpsDisplay.innerText = `FPS: ${result.fps ? result.fps.toFixed(1) : '2.5'}`;
-            };
-        }
-    });
+    window.CSRF_TOKEN = '{{ csrf_token }}';
+    window.API_VIOLENCE_DETECT = '{% url "api:violence-detect" %}';
 </script>
+<script src="{% static 'web/js/violence.js' %}"></script>
 {% endblock %}

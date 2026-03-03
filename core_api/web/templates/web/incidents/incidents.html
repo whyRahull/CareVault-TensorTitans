@@ -1,0 +1,189 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Recent Incidents - CareVault{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-900">Recent Incidents</h1>
+    <a href="{% url 'web:report_incident' %}"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+        Report Incident
+    </a>
+</div>
+
+<div class="bg-white shadow overflow-hidden sm:rounded-md mt-6">
+    <div
+        class="px-4 py-5 border-b border-gray-200 sm:px-6 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">Public log of detected and reported incidents.</p>
+
+        <!-- Filter Form -->
+        <form method="get" class="flex gap-2 text-sm">
+            <select name="type"
+                class="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">All Types</option>
+
+                {% if current_type == 'violence' %}
+                <option value="violence" selected>Violence</option>
+                {% else %}
+                <option value="violence">Violence</option>
+                {% endif %}
+
+                {% if current_type == 'hand_sos' %}
+                <option value="hand_sos" selected>Hand SOS</option>
+                {% else %}
+                <option value="hand_sos">Hand SOS</option>
+                {% endif %}
+
+                {% if current_type == 'lost_child' %}
+                <option value="lost_child" selected>Lost Child</option>
+                {% else %}
+                <option value="lost_child">Lost Child</option>
+                {% endif %}
+            </select>
+            <select name="severity"
+                class="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">All Severities</option>
+
+                {% if current_severity == 'critical' %}
+                <option value="critical" selected>Critical</option>
+                {% else %}
+                <option value="critical">Critical</option>
+                {% endif %}
+
+                {% if current_severity == 'high' %}
+                <option value="high" selected>High</option>
+                {% else %}
+                <option value="high">High</option>
+                {% endif %}
+
+                {% if current_severity == 'medium' %}
+                <option value="medium" selected>Medium</option>
+                {% else %}
+                <option value="medium">Medium</option>
+                {% endif %}
+
+                {% if current_severity == 'low' %}
+                <option value="low" selected>Low</option>
+                {% else %}
+                <option value="low">Low</option>
+                {% endif %}
+
+                {% if current_severity == 'info' %}
+                <option value="info" selected>Information</option>
+                {% else %}
+                <option value="info">Information</option>
+                {% endif %}
+            </select>
+            <button type="submit"
+                class="bg-white border border-gray-300 rounded-md px-3 py-1 hover:bg-gray-50 text-gray-700 font-medium">Filter</button>
+            {% if current_type or current_severity %}
+            <a href="{% url 'web:incidents' %}"
+                class="text-gray-400 hover:text-gray-600 px-2 py-1 flex items-center">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <ul class="divide-y divide-gray-200">
+        {% for incident in page_obj %}
+        <li
+            class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors {% if incident.severity == 'critical' %}border-l-4 border-red-500{% elif incident.severity == 'high' %}border-l-4 border-orange-500{% endif %}">
+            <div class="flex items-center justify-between">
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-indigo-600 truncate">
+                        {{ incident.get_incident_type_display }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        <span>{{ incident.camera_room|default:"Manual Report" }}</span>
+                        <span>&middot;</span>
+                        <span>{{ incident.detected_at|date:"M d, Y H:i:s" }}</span>
+                    </p>
+
+
+
+
+
+
+
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        {% if incident.severity == 'critical' %}bg-red-100 text-red-800
+                        {% elif incident.severity == 'high' %}bg-orange-100 text-orange-800
+                        {% elif incident.severity == 'medium' %}bg-yellow-100 text-yellow-800
+                        {% elif incident.severity == 'low' %}bg-blue-100 text-blue-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ incident.severity|upper }}
+                    </span>
+                </div>
+            </div>
+            {% if incident.description %}
+            <p class="mt-2 text-sm text-gray-600 italic">"{{ incident.description }}"</p>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li class="px-4 py-12 text-center">
+            <p class="text-gray-500 italic">No incidents match your criteria.</p>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 flex items-center justify-between">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}"
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous </a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}"
+                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next </a>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing page
+                    <span class="font-medium">{{ page_obj.number }}</span>
+                    of
+                    <span class="font-medium">{{ page_obj.paginator.num_pages }}</span>
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}"
+                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Previous</span>
+                        <!-- Heroicon name: solid/chevron-left -->
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                            aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}"
+                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Next</span>
+                        <!-- Heroicon name: solid/chevron-right -->
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                            aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

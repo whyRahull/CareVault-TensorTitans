@@ -11,6 +11,48 @@
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Live Vigilance Hub Tile -->
+        <a href="{% url 'web:dash-vigilance' %}"
+            class="group relative bg-indigo-600 rounded-2xl shadow-lg border border-indigo-700 p-8 hover:shadow-xl hover:-translate-y-1 hover:bg-indigo-700 transition-all duration-300 overflow-hidden">
+            <div
+                class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all">
+            </div>
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            </div>
+
+            <div
+                class="w-14 h-14 bg-white/20 text-white rounded-xl flex items-center justify-center mb-6 shadow-inner relative">
+                <!-- Radar sweep animation -->
+                <div class="absolute inset-0 rounded-xl overflow-hidden">
+                    <div
+                        class="w-[150%] h-[150%] absolute top-1/2 left-1/2 -ml-[75%] -mt-[75%] bg-[conic-gradient(from_0deg,transparent_0_340deg,white_360deg)] opacity-30 animate-[spin_3s_linear_infinite]">
+                    </div>
+                </div>
+                <svg class="h-8 w-8 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2 tracking-tight">Live Vigilance Hub</h3>
+            <p class="text-indigo-100 text-sm leading-relaxed mb-6">Access real-time camera streams and proactive
+                multi-threat detection feeds actively monitoring the premises.</p>
+            <div class="flex items-center text-white font-semibold text-sm">
+                Open Monitor
+                <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </div>
+        </a>
+
         <!-- Violence Dashboard Tile -->
         <a href="{% url 'web:dash-violence' %}"
             class="group relative bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-lg hover:border-indigo-400 transition-all duration-300 overflow-hidden">

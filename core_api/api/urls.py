@@ -6,9 +6,9 @@ from api.views.incidents.missing_person.views import (
     MissingPersonListCreateView, MissingPersonDetailView, 
     MarkFoundView, MissingPersonPhotoView
 )
-from api.views.incidents.hand_sos.views import HandSOSDashboardView, HandSOSImageDetectView
-from api.views.incidents.violence.views import ViolenceDashboardView, ViolenceVideoDetectView
-from api.views.incidents.lost_child.views import LostChildDashboardView, LostChildImageSearchView
+from api.views.incidents.hand_sos.views import HandSOSImageDetectView
+from api.views.incidents.violence.views import ViolenceVideoDetectView
+from api.views.incidents.lost_child.views import LostChildImageSearchView
 
 app_name = 'api'
 
