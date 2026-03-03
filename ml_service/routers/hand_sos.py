@@ -18,8 +18,11 @@ from typing import Optional
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
+import logging
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from schemas import HandSOSResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -53,8 +56,12 @@ def _load_models() -> bool:
             _keypoint_labels = [row[0] for row in csv.reader(f)]
         _keypoint_classifier = _KeyPointClassifier(str(_KP_MODEL_DIR / "keypoint_classifier.tflite"))
         _models_loaded = True
+        logger.info("Hand SOS models loaded successfully.")
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load Hand SOS models: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return False
 
 
@@ -71,18 +78,22 @@ class _KeyPointClassifier:
         except ImportError:
             pass
 
-        # Fallback: use the standard tflite_runtime if available
         try:
-            import tflite_runtime.interpreter as tflite
-            self._interpreter = tflite.Interpreter(model_path=model_path)
-        except ImportError:
-            # Use TensorFlow Lite from TF
-            import tensorflow as tf
-            self._interpreter = tf.lite.Interpreter(model_path=model_path)
+            # Fallback: use the standard tflite_runtime if available
+            try:
+                import tflite_runtime.interpreter as tflite
+                self._interpreter = tflite.Interpreter(model_path=model_path)
+            except ImportError:
+                # Use TensorFlow Lite from TF
+                import tensorflow as tf
+                self._interpreter = tf.lite.Interpreter(model_path=model_path)
 
-        self._interpreter.allocate_tensors()
-        self._input_details = self._interpreter.get_input_details()
-        self._output_details = self._interpreter.get_output_details()
+            self._interpreter.allocate_tensors()
+            self._input_details = self._interpreter.get_input_details()
+            self._output_details = self._interpreter.get_output_details()
+        except Exception as e:
+            logger.error(f"Error initializing TFLite interpreter: {e}")
+            raise
 
     def __call__(self, landmark_list: list) -> int:
         input_details = self._input_details

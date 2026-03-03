@@ -1,0 +1,206 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Vigilance Dashboard - CareVault AI Core{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-end">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Vigilance Hub</h1>
+        <p class="text-gray-600">Unified real-time monitoring across all active surveillance nodes.</p>
+    </div>
+    <div class="flex gap-4">
+        <span
+            class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-indigo-200">
+            SYSTEM_UPTIME: 99.9%
+        </span>
+    </div>
+</div>
+
+{% if cameras %}
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    {% for camera in cameras %}
+    <div class="bg-black rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-800 relative group aspect-video"
+        id="cam-container-{{ camera.pk }}" data-cam-id="{{ camera.pk }}" data-type="{{ camera.camera_type }}"
+        data-name="{{ camera.name }}">
+
+        <!-- Video/Placeholder -->
+        <div class="absolute inset-0 flex items-center justify-center bg-gray-900" id="feed-{{ camera.pk }}">
+            <div class="text-center">
+                {% if camera.camera_type == 'LOCAL' %}
+                <button onclick="startLocalCamera({{ camera.pk }})"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold transition-all transform hover:scale-105 shadow-xl">
+                    START LOCAL CAM
+                </button>
+                {% else %}
+                <svg class="w-12 h-12 text-gray-700 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <p class="text-gray-500 font-mono text-[10px] uppercase tracking-tighter">Connecting to Remote Feed...
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Overlays -->
+        <div class="absolute top-4 left-4 flex gap-2 z-10">
+            <span
+                class="bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded border border-white/10 font-bold uppercase">
+                {{ camera.name }}
+            </span>
+            <span id="status-{{ camera.pk }}"
+                class="bg-gray-600 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest">
+                OFFLINE
+            </span>
+        </div>
+
+        <!-- AI Detection Overlay -->
+        <div class="absolute inset-0 pointer-events-none border-4 border-transparent transition-colors duration-300"
+            id="border-{{ camera.pk }}"></div>
+
+        <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end z-10">
+            <div id="result-{{ camera.pk }}"
+                class="hidden transition-all duration-300 transform translate-y-2 opacity-0">
+                <div class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg uppercase mb-1 inline-block"
+                    id="badge-{{ camera.pk }}">
+                    THREAT DETECTED
+                </div>
+            </div>
+            <div
+                class="bg-black/40 backdrop-blur-sm p-2 rounded-lg text-[8px] font-mono text-gray-400 border border-white/5">
+                CAM_NODE_{{ camera.pk }}
+            </div>
+        </div>
+
+        <canvas id="canvas-{{ camera.pk }}" class="hidden"></canvas>
+        <video id="video-{{ camera.pk }}" class="w-full h-full object-cover hidden" playsinline muted autoplay></video>
+        <img id="annotated-{{ camera.pk }}" class="hidden absolute inset-0 w-full h-full object-cover z-0" />
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-20 text-center">
+    <svg class="w-16 h-16 text-gray-200 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+    <p class="text-gray-400 font-bold uppercase tracking-widest text-lg">No Active Cameras Detected</p>
+    <p class="text-gray-500 mt-2">Go to <a href="{% url 'web:camera_manage' %}"
+            class="text-indigo-600 underline">Configuration</a> to add your first stream.</p>
+</div>
+{% endif %}
+
+<script>
+    const streams = {};
+
+    function startLocalCamera(camId) {
+        const video = document.getElementById(`video-${camId}`);
+        const feed = document.getElementById(`feed-${camId}`);
+        const status = document.getElementById(`status-${camId}`);
+
+        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false })
+            .then(stream => {
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                    video.classList.remove('hidden');
+                    feed.classList.add('hidden');
+                    status.innerText = 'ONLINE';
+                    status.className = 'bg-green-500 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest';
+                    initWebSocket(camId);
+                };
+            })
+            .catch(err => {
+                console.error("Camera error:", err);
+                alert("Could not access camera: " + err.message);
+            });
+    }
+
+    function initWebSocket(camId) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/ml/stream/local_cam_${camId}/`);
+
+        ws.onopen = () => {
+            console.log(`WS Connected for Cam ${camId}`);
+            startStreaming(camId, ws);
+        };
+
+        ws.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            handleDetection(camId, data);
+        };
+
+        streams[camId] = ws;
+    }
+
+    function startStreaming(camId, ws) {
+        const video = document.getElementById(`video-${camId}`);
+        const canvas = document.getElementById(`canvas-${camId}`);
+        const context = canvas.getContext('2d');
+
+        canvas.width = 640;
+        canvas.height = 480;
+
+        const interval = setInterval(() => {
+            if (ws.readyState !== WebSocket.OPEN) {
+                clearInterval(interval);
+                return;
+            }
+
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            const base64 = dataUrl.split(',')[1];
+
+            // Send for multiple detections sequentially
+            ws.send(JSON.stringify({
+                type: 'violence',
+                frame_b64: base64
+            }));
+
+            // Also send for Hand SOS detection
+            ws.send(JSON.stringify({
+                type: 'hand_sos',
+                frame_b64: base64
+            }));
+
+        }, 500); // 2 FPS to reduce overhead
+    }
+
+    function handleDetection(camId, data) {
+        const border = document.getElementById(`border-${camId}`);
+        const resultDiv = document.getElementById(`result-${camId}`);
+        const badge = document.getElementById(`badge-${camId}`);
+        const video = document.getElementById(`video-${camId}`);
+        const annotatedImg = document.getElementById(`annotated-${camId}`);
+
+        const res = data.result;
+        const isThreat = (data.model === 'violence' && res.suspicious_detected) ||
+            (data.model === 'hand_sos' && res.sos_detected);
+
+        // Update annotated frame if available
+        const b64 = res.thumbnail_b64 || res.annotated_image_b64;
+        if (b64) {
+            annotatedImg.src = `data:image/jpeg;base64,${b64}`;
+            annotatedImg.classList.remove('hidden');
+            video.classList.add('opacity-0');
+        }
+
+        if (isThreat) {
+            border.style.borderColor = 'rgba(220, 38, 38, 0.8)'; // Red-600
+            resultDiv.classList.remove('hidden', 'translate-y-2', 'opacity-0');
+            badge.innerText = data.model === 'violence' ? 'VIOLENCE ALERT' : 'SOS SIGNAL';
+
+            // Flash effect
+            border.classList.add('animate-pulse');
+
+            // Auto-hide threat badge after 3 seconds of no threat
+            if (streams[camId].timeout) clearTimeout(streams[camId].timeout);
+            streams[camId].timeout = setTimeout(() => {
+                border.style.borderColor = 'transparent';
+                border.classList.remove('animate-pulse');
+                resultDiv.classList.add('translate-y-2', 'opacity-0');
+            }, 3000);
+        }
+    }
+</script>
+{% endblock %}

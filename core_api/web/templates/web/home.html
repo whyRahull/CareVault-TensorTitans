@@ -1,0 +1,71 @@
+{% extends 'web/base.html' %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Welcome to CareVault</h1>
+    <p class="mt-2 text-lg text-gray-600">Advanced AI monitoring and alert system.</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+    <!-- Total Incidents Card -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Active Incidents</dt>
+                <dd class="mt-1 text-3xl font-semibold text-gray-900">0</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Missing Persons Card -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Missing Persons Reported</dt>
+                <dd class="mt-1 text-3xl font-semibold text-gray-900">0</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- System Status Card -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">ML System Status</dt>
+                <dd class="mt-1 text-lg font-semibold text-green-600 flex items-center">
+                    <span class="h-3 w-3 rounded-full bg-green-500 mr-2"></span> Online
+                </dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Links</h3>
+        <ul class="space-y-3">
+            <li>
+                <a href="{% url 'web:incidents' %}" class="text-indigo-600 hover:text-indigo-900 flex items-center">
+                    <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    View Recent Incidents
+                </a>
+            </li>
+            {% if user.is_authenticated and user.role == 'admin' %}
+            <li>
+                <a href="{% url 'web:org_panel' %}" class="text-indigo-600 hover:text-indigo-900 flex items-center">
+                    <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Manage Employees
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

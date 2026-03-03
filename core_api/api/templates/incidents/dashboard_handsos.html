@@ -1,0 +1,213 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Hand SOS Dashboard - CareVault{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center gap-4 mb-2">
+        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                </path>
+            </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">Hand SOS Monitoring</h1>
+    </div>
+    <p class="text-gray-600">Detecting silent distress signals and visual emergency calls.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- Main Feed -->
+    <div class="lg:col-span-3 space-y-8">
+        <div class="bg-black rounded-3xl aspect-video relative overflow-hidden group">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center group-hover:scale-110 transition-transform duration-500">
+                    <svg class="w-20 h-20 text-gray-800 mx-auto mb-4" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3m0 0a10.003 10.003 0 018.139 15.441l.054.09m-8.192-15.531l-.054.09A10.003 10.003 0 0112 21">
+                        </path>
+                    </svg>
+                    <p class="text-gray-600 font-mono text-sm uppercase tracking-widest">Awaiting Gesture Signal...</p>
+                </div>
+            </div>
+            <div class="absolute top-6 left-6 flex gap-3">
+                <span class="bg-amber-600 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">SOS HAND
+                    RECOGNITION ACTIVE</span>
+                <span
+                    class="bg-white/10 backdrop-blur-md text-white/80 px-3 py-1 rounded-md text-xs font-mono border border-white/10">SENSOR_ID:
+                    CAM_WEST_02</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Gesture Recognition Log</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-gray-400 text-sm uppercase tracking-wider border-b border-gray-100">
+                            <th class="pb-4 font-semibold">Gesture Type</th>
+                            <th class="pb-4 font-semibold">Confidence</th>
+                            <th class="pb-4 font-semibold">Location</th>
+                            <th class="pb-4 font-semibold">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-gray-50">
+                        <tr>
+                            <td class="py-4 font-medium text-gray-900">Palm Flash (SOS)</td>
+                            <td class="py-4 text-green-600 font-bold">98.2%</td>
+                            <td class="py-4 text-gray-500">Library Entrance</td>
+                            <td class="py-4 text-gray-400">14:22:10</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 font-medium text-gray-900">Repeated Wave</td>
+                            <td class="py-4 text-blue-600 font-bold">84.5%</td>
+                            <td class="py-4 text-gray-500">Main Square</td>
+                            <td class="py-4 text-gray-400">14:18:05</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Controls -->
+    <div class="space-y-6">
+        <div class="bg-amber-600 rounded-2xl p-6 text-white shadow-xl shadow-amber-200">
+            <h3 class="font-bold text-lg mb-2">Sensitivity Config</h3>
+            <p class="text-amber-100 text-xs mb-6">Adjust gesture recognition thresholds (Recommended: 85%)</p>
+            <input type="range"
+                class="w-full accent-white h-1.5 bg-amber-700 rounded-lg appearance-none cursor-pointer">
+            <div class="flex justify-between text-[10px] mt-2 font-mono text-amber-200 uppercase">
+                <span>Fast</span>
+                <span>Accurate</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <button
+                    class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-amber-50 group transition-colors">
+                    <svg class="w-6 h-6 text-gray-400 group-hover:text-amber-600 mb-2" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase">Record</span>
+                </button>
+                <button
+                    class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-amber-50 group transition-colors">
+                    <svg class="w-6 h-6 text-gray-400 group-hover:text-amber-600 mb-2" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                        </path>
+                    </svg>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase">Call</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Manual Image Analysis -->
+        <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
+            <h3 class="font-bold text-amber-900 mb-2 flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                    </path>
+                </svg>
+                Manual Image Audit
+            </h3>
+            <p class="text-[10px] text-amber-700 mb-4 uppercase font-bold tracking-tight">Verify past gesture signals
+            </p>
+
+            <form id="image-upload-form" class="space-y-3">
+                <div
+                    class="border-2 border-dashed border-amber-200 rounded-xl p-3 text-center hover:border-amber-400 transition-colors cursor-pointer relative bg-white/50">
+                    <input type="file" id="image-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        accept="image/*">
+                    <span class="text-[10px] text-amber-600 font-mono block" id="file-name">SELECT JPG/PNG</span>
+                </div>
+                <button type="submit"
+                    class="w-full bg-amber-600 text-white py-2 rounded-lg font-bold text-xs hover:bg-amber-700 transition-all">
+                    ANALYSE GESTURE
+                </button>
+            </form>
+
+            <div id="analysis-results" class="mt-4 hidden animate-in fade-in zoom-in duration-300">
+                <div class="bg-white rounded-xl p-3 shadow-sm border border-amber-100">
+                    <div id="result-badge"
+                        class="px-2 py-0.5 rounded-[4px] text-[9px] font-black uppercase mb-2 inline-block"></div>
+                    <p id="result-msg" class="text-[11px] text-gray-700 font-medium"></p>
+                    <div id="result-thumb" class="mt-3 rounded-lg overflow-hidden border border-amber-50 hidden">
+                        <img src="" class="w-full">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('image-upload-form');
+        const fileInput = document.getElementById('image-file');
+        const fileName = document.getElementById('file-name');
+        const resultsDiv = document.getElementById('analysis-results');
+        const resultBadge = document.getElementById('result-badge');
+        const resultMsg = document.getElementById('result-msg');
+        const resultThumb = document.getElementById('result-thumb');
+
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length) fileName.innerText = e.target.files[0].name.toUpperCase();
+        });
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const btn = form.querySelector('button');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'PROCESSING...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const resp = await fetch('{% url "api:handsos-detect" %}', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: formData
+                });
+                const data = await resp.json();
+
+                resultsDiv.classList.remove('hidden');
+                if (data.sos_detected) {
+                    resultBadge.className = 'px-2 py-0.5 rounded-[4px] text-[9px] font-black uppercase mb-2 inline-block bg-red-600 text-white';
+                    resultBadge.innerText = 'SOS DETECTED';
+                } else {
+                    resultBadge.className = 'px-2 py-0.5 rounded-[4px] text-[9px] font-black uppercase mb-2 inline-block bg-amber-100 text-amber-700';
+                    resultBadge.innerText = 'NORMAL GESTURE';
+                }
+                resultMsg.innerText = `Detected: ${data.gesture.toUpperCase()} (${data.hands_found} hand(s))`;
+                if (data.annotated_image_b64) {
+                    resultThumb.classList.remove('hidden');
+                    resultThumb.querySelector('img').src = `data:image/jpeg;base64,${data.annotated_image_b64}`;
+                } else {
+                    resultThumb.classList.add('hidden');
+                }
+            } catch (err) {
+                alert('Analysis failed: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        });
+    });
+</script>
+{% endblock %}

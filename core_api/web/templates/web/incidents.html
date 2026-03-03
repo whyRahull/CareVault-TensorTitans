@@ -1,0 +1,51 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Recent Incidents - CareVault{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-900">Recent Incidents</h1>
+    <a href="{% url 'web:report_incident' %}"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+        Report Incident
+    </a>
+</div>
+
+<div class="bg-white shadow overflow-hidden sm:rounded-md mt-6">
+    <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">Public log of detected and reported incidents.</p>
+    </div>
+    <ul class="divide-y divide-gray-200">
+        {% for incident in incidents %}
+        <li class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between">
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-indigo-600 truncate">
+                        {{ incident.get_incident_type_display }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        {{ incident.camera_room|default:"Manual Report" }} • {{ incident.detected_at|date:"M d, Y H:i"
+                        }}
+                    </p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        {% if incident.severity == 'critical' %}bg-red-100 text-red-800
+                        {% elif incident.severity == 'high' %}bg-orange-100 text-orange-800
+                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ incident.severity|upper }}
+                    </span>
+                </div>
+            </div>
+            {% if incident.description %}
+            <p class="mt-2 text-sm text-gray-600 italic">"{{ incident.description }}"</p>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li class="px-4 py-12 text-center">
+            <p class="text-gray-500 italic">No incidents recorded yet.</p>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

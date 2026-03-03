@@ -1,0 +1,74 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Incident Analysis - CareVault{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Incident Analysis</h1>
+    <p class="text-gray-600 mt-2">Comprehensive data overview and trend analysis of campus safety metrics.</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Incidents</p>
+        <p class="text-3xl font-black text-indigo-600 mt-1">{{ total_incidents }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-red-500">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Violence</p>
+        <p class="text-3xl font-black text-gray-900 mt-1">{{ violence_count }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-amber-500">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Hand SOS</p>
+        <p class="text-3xl font-black text-gray-900 mt-1">{{ sos_count }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-indigo-500">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Lost Child</p>
+        <p class="text-3xl font-black text-gray-900 mt-1">{{ lost_child_count }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Trend Chart Simulation -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-bold text-gray-900 mb-6">Weekly Incident Trends</h3>
+        <div class="h-64 w-full flex items-end gap-4 px-4 pb-2 border-b border-gray-100">
+            {% for i in "1234567" %}
+            <div class="flex-grow bg-indigo-100 rounded-t-lg relative group transition-all hover:bg-indigo-300"
+                style="height: calc({{ forloop.counter }} * 10%)">
+                <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    {{ forloop.counter }}0
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-between mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+    </div>
+
+    <!-- Recent Logs -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-bold text-gray-900 mb-6">Recent Records</h3>
+        <div class="space-y-4">
+            {% for incident in recent_incidents %}
+            <div
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <div>
+                    <p class="text-sm font-bold text-gray-900">{{ incident.get_incident_type_display }}</p>
+                    <p class="text-[10px] text-gray-500">{{ incident.detected_at|date:"M d, H:i" }} • {{
+                        incident.camera_room }}</p>
+                </div>
+                <span
+                    class="text-xs font-mono font-bold uppercase {% if incident.severity == 'critical' %}text-red-600{% else %}text-gray-400{% endif %}">
+                    {{ incident.severity }}
+                </span>
+            </div>
+            {% empty %}
+            <p class="text-center py-12 text-gray-400 italic">No data to display.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -56,3 +56,7 @@ class SOSResponse(BaseModel):
 class LostChildResponse(BaseModel):
     status: str
     message: str
+    matched: bool = False
+    confidence: float = 0.0
+    person_id: Optional[int] = None
+    annotated_image_b64: Optional[str] = None

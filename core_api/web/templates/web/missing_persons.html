@@ -1,0 +1,59 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Missing Persons - CareVault{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-900">Missing Persons</h1>
+    <a href="{% url 'web:report_missing' %}"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+        Report Missing Person
+    </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for person in missing_persons %}
+    <div
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        {% if person.photo %}
+        <img src="{{ person.photo.url }}" alt="{{ person.name }}" class="w-full h-64 object-cover">
+        {% else %}
+        <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+            <span class="text-gray-400 italic">No Photo Available</span>
+        </div>
+        {% endif %}
+
+        <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-gray-900">{{ person.name }}</h3>
+                <span
+                    class="px-2 py-1 text-xs font-bold rounded-full {% if person.is_found %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                    {% if person.is_found %}FOUND{% else %}MISSING{% endif %}
+                </span>
+            </div>
+
+            <div class="space-y-2 text-sm text-gray-600 mb-6">
+                <p><strong>Age:</strong> {{ person.age|default:"Unknown" }}</p>
+                <p><strong>Last Seen:</strong> {{ person.last_seen_location|default:"Not specified" }}</p>
+                <p><strong>Reported:</strong> {{ person.reported_at|date:"M d, Y" }}</p>
+            </div>
+
+            {% if person.description %}
+            <p class="text-sm text-gray-500 italic line-clamp-2">"{{ person.description }}"</p>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full py-24 text-center">
+        <div class="mb-4">
+            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        </div>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No missing persons reported</h3>
+        <p class="mt-1 text-sm text-gray-500">Everyone is safe and accounted for.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

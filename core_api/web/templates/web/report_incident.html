@@ -1,0 +1,134 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Report Manual Incident - CareVault{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Report Incident</h1>
+        <p class="text-gray-600 mt-2">Manually log a safety incident if the automatic detection missed it or for
+            human-identified emergencies.</p>
+    </div>
+
+    <form method="post" class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        {% csrf_token %}
+        <div class="space-y-6">
+            {% for field in form %}
+            <div class="field-container">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-1">
+                    {{ field.label }}
+                </label>
+                <div class="mt-1 relative">
+                    {{ field }}
+                    {% if field.name == 'description' %}
+                    <button type="button" id="check-severity-btn"
+                        class="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        ASK AI FOR SEVERITY
+                    </button>
+                    {% endif %}
+                </div>
+                {% if field.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="pt-4">
+                <button type="submit"
+                    class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+                    Submit Report
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    input,
+    select,
+    textarea {
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkBtn = document.getElementById('check-severity-btn');
+        const descField = document.getElementById('id_description');
+        const severityField = document.getElementById('id_severity');
+
+        if (checkBtn && descField && severityField) {
+            checkBtn.addEventListener('click', async function () {
+                const desc = descField.value.trim();
+                if (!desc) {
+                    alert('Please enter a description first.');
+                    return;
+                }
+
+                checkBtn.disabled = true;
+                checkBtn.innerHTML = `
+                <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                CHECKING...
+            `;
+
+                try {
+                    const response = await fetch('/api/incidents/check-severity/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ description: desc })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.severity) {
+                        const predicted = data.severity.toLowerCase();
+
+                        if (severityField.options) {
+                            // Match predicted severity to a close enough option in the select
+                            Array.from(severityField.options).forEach(option => {
+                                if (option.value.toLowerCase().includes(predicted) || predicted.includes(option.value.toLowerCase())) {
+                                    severityField.value = option.value;
+                                }
+                            });
+                        } else {
+                            // Fallback for TextInput
+                            severityField.value = data.severity;
+                        }
+                    } else {
+                        alert('AI Error: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    alert('Connection Error: ' + err.message);
+                } finally {
+                    checkBtn.disabled = false;
+                    checkBtn.innerHTML = `
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    ASK AI FOR SEVERITY
+                `;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

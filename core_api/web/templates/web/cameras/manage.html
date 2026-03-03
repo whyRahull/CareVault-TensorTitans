@@ -1,0 +1,101 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Manage Camera Streams - CareVault{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Camera Configuration</h1>
+    <p class="text-gray-600">Add and manage your organization's surveillance feeds.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Add Camera Form -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Add New Camera</h2>
+        <form method="post" class="space-y-4" id="camera-form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div id="div_{{ field.id_for_label }}">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <div class="mt-1 text-xs text-red-600">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit"
+                class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                Save Camera
+            </button>
+        </form>
+    </div>
+
+    <!-- Camera List -->
+    <div class="lg:col-span-2 space-y-4">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Active Streams</h2>
+        {% if cameras %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for camera in cameras %}
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+                <div>
+                    <h3 class="font-bold text-gray-900">{{ camera.name }}</h3>
+                    <p class="text-xs text-gray-500 uppercase font-mono">{{ camera.get_camera_type_display }}</p>
+                    {% if camera.camera_type == 'REMOTE' %}
+                    <p class="text-[10px] text-indigo-600 mt-1 truncate max-w-[200px]">{{ camera.stream_url }}</p>
+                    {% endif %}
+                    <div class="mt-2 text-[10px]">
+                        {% if camera.is_active %}
+                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                        {% else %}
+                        <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">INACTIVE</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{% url 'web:camera_delete' camera.pk %}" class="text-red-400 hover:text-red-600 p-1"
+                    onclick="return confirm('Delete this camera?')">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
+            <p class="text-gray-400 uppercase tracking-widest text-sm">No cameras configured yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.querySelector('select[name="camera_type"]');
+        const urlDiv = document.getElementById('div_id_stream_url');
+        const urlInput = document.querySelector('input[name="stream_url"]');
+
+        function toggleUrlField() {
+            if (typeSelect.value === 'LOCAL') {
+                urlDiv.classList.add('hidden');
+                urlInput.required = false;
+            } else {
+                urlDiv.classList.remove('hidden');
+                urlInput.required = true;
+                if (!urlInput.value) {
+                    urlInput.value = 'rtsp://admin:password@';
+                    urlInput.focus();
+                }
+            }
+        }
+
+        typeSelect.addEventListener('change', toggleUrlField);
+        toggleUrlField(); // Initial state
+    });
+</script>
+{% endblock %}
