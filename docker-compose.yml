@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: carevault_db
+    environment:
+      POSTGRES_DB: carevault
+      POSTGRES_USER: carevault_user
+      POSTGRES_PASSWORD: carevault_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U carevault_user -d carevault" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    container_name: carevault_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

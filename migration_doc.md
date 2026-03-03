@@ -181,6 +181,12 @@ To support multiple cameras simultaneously on a centralized Vigilance Screen (Vi
 - **Batched ML Inference:** The FastAPI ML Service can be scaled horizontally. When multiple frames arrive simultaneously, FastAPI can batch them into a single tensor for the YOLO model, massively improving GPU utilization and inference speed compared to processing them individually.
 - **Grid UI Dashboard:** The React Frontend provides a grid layout where each cell renders a low-latency WebRTC feed of a specific camera, with overlay bounding boxes injected dynamically via the WebSocket JSON response rather than re-rendering the whole video in the backend. This guarantees smooth playback even with 10+ cameras on a single screen.
 
+### 3.4 Tooling & Dependency Management
+
+To guarantee reproducible environments across our microservices, we will adopt **Poetry** for all Python dependency management.
+- **Target Microservices:** Django Core API, ASGI Real-time Gateway, and FastAPI ML Engine.
+- **Rationale:** Poetry modernizes the Python workflow by providing strict deterministic builds (via `poetry.lock`), separating development and production dependencies intuitively, and eliminating dependency resolution conflicts commonly found with standard `pip` and flat `requirements.txt` ecosystems.
+
 ---
 
 ## 4. Why Are We Doing This? (Technical Rationale)
@@ -204,11 +210,13 @@ Email credentials and database admin logic are stripped away from the vulnerable
 ## 5. Migration Roadmap
 
 ### Phase 1: Foundation (UI & Core Server)
-- Initialize the Django project with PostgreSQL.
+- Spin up a local database environment using official **PostgreSQL and Redis Docker images** via `docker-compose`.
+- Initialize the Django project natively. Execute database tasks (e.g., migrations, seeding) against the locally exposed Docker container ports. Use **Poetry** to manage and lock core application dependencies.
 - Build the basic React Frontend (replacing static HTML templates).
 - Set up JWT Authentication and User models.
 
 ### Phase 2: ML Extraction into FastAPI
+- Initialize the standalone FastAPI application project using **Poetry**.
 - Strip Mediapipe, OpenCV, and YOLO code out of the existing Flask `app.py` files.
 - Re-wrap them in FastAPI endpoints that accept `base64` strings or binary image files and return JSON results.
 
@@ -222,6 +230,6 @@ Email credentials and database admin logic are stripped away from the vulnerable
 - Store incident thresholds and trigger criteria in the database.
 
 ### Phase 5: Containerization & Deployment
-- Write `Dockerfile`s for React, Django, and FastAPI.
-- Create a `docker-compose.yml` to orchestrate Nginx (Reverse Proxy), PostgreSQL, Redis, Django, and FastAPI.
-- Deploy to a test cloud environment.
+- For local development, **Core API**, **ML Service**, and **Frontend** will run *natively* to bypass complex host-to-container hardware integrations (e.g. camera feeds/GPU passthrough).
+- Infrastructure like PostgreSQL and Redis will be orchestrated via `docker-compose.yml`.
+- Build complete containerization (writing production `Dockerfile`s) later when moving to a fully remote cloud environment.
