@@ -13,7 +13,7 @@ class HandSOSImageDetectView(APIView):
             return Response({'error': 'Image file is required'}, status=400)
 
         config = MLServiceConfig.get_solo()
-        ml_url = f"{config.base_url.rstrip('/')}/api/hand_sos/detect"
+        ml_url = f"{config.base_url.rstrip('/')}{config.hand_sos_path}"
 
         try:
             files = {'file': (image_file.name, image_file.read(), image_file.content_type)}

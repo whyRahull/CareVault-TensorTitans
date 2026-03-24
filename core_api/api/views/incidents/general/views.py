@@ -53,8 +53,7 @@ class SeverityCheckView(APIView):
             return Response({'error': 'Description is required'}, status=400)
 
         config = MLServiceConfig.get_solo()
-        # The ML service router is at /api/severity/predict
-        ml_url = f"{config.base_url.rstrip('/')}/api/severity/predict"
+        ml_url = f"{config.base_url.rstrip('/')}{config.severity_path}"
         
         try:
             resp = requests.post(

@@ -13,8 +13,15 @@ def landing_view(request):
 
 @login_required
 def dashboard_view(request):
-    """Logged-in dashboard with navigation tiles."""
-    return render(request, 'web/pages/dashboard.html')
+    """Logged-in dashboard with navigation tiles and real-time stats."""
+    from api.models import Incident, MissingPerson
+    
+    context = {
+        'total_incidents': Incident.objects.count(),
+        'missing_persons_count': MissingPerson.objects.filter(is_found=False).count(),
+        'recent_incidents': Incident.objects.order_by('-detected_at')[:5],
+    }
+    return render(request, 'web/pages/dashboard.html', context)
 
 
 @login_required
@@ -54,5 +61,5 @@ def analysis_view(request):
 
 @login_required
 def home_view(request):
-    """Legacy/Internal home page."""
-    return render(request, 'web/pages/home.html')
+    """Unified entry point for logged-in users."""
+    return dashboard_view(request)

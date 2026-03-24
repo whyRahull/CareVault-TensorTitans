@@ -5,6 +5,38 @@
 
 let streams = {};
 
+window.startLocalCamera = function (camId) {
+    const video = document.getElementById(`video-${camId}`);
+    const feed = document.getElementById(`feed-${camId}`);
+    const status = document.getElementById(`status-${camId}`);
+
+    if (!window.isSecureContext) {
+        alert("Camera access requires a secure context (HTTPS or localhost). Please use http://localhost:8000/ instead of http://127.0.0.1:8000/ if yours is blocked.");
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false })
+        .then(stream => {
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+                video.classList.remove('hidden');
+                feed.classList.add('hidden'); // Hide the "Start" button overlay
+                status.innerText = 'LIVE';
+                status.classList.replace('bg-gray-600', 'bg-green-600');
+                initWebSocket(camId);
+            };
+        })
+        .catch(err => {
+            console.error("Camera error:", err);
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                alert("Camera permission was denied. If the browser didn't prompt you, go to browser settings (or click the lock icon in the address bar) and set Camera to 'Allow' for this site.");
+            } else {
+                alert("Could not access camera: " + err.message);
+            }
+        });
+};
+
 function initWebSocket(camId) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${protocol}//${window.location.host}/ws/ml/stream/local_cam_${camId}/`);

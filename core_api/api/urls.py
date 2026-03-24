@@ -9,6 +9,7 @@ from api.views.incidents.missing_person.views import (
 from api.views.incidents.hand_sos.views import HandSOSImageDetectView
 from api.views.incidents.violence.views import ViolenceVideoDetectView
 from api.views.incidents.lost_child.views import LostChildImageSearchView
+from api.views.ml_health import MLServiceHealthView
 
 app_name = 'api'
 
@@ -30,4 +31,5 @@ urlpatterns = [
     path('incidents/hand-sos/detect/', HandSOSImageDetectView.as_view(), name='handsos-detect'),
     path('incidents/violence/detect/', ViolenceVideoDetectView.as_view(), name='violence-detect'),
     path('incidents/lost-child/search/', LostChildImageSearchView.as_view(), name='lostchild-search'),
+    path('health/ml/', MLServiceHealthView.as_view(), name='ml-health'),
 ]

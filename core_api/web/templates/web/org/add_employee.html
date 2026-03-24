@@ -1,43 +1,111 @@
 {% extends 'web/base.html' %}
 
+{% block title %}Add New Employee - CareVault Command Center{% endblock %}
+
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden mt-10">
-    <div class="px-6 py-8">
-        <div class="flex items-center mb-6">
-            <a href="{% url 'web:org_panel' %}" class="text-indigo-600 hover:text-indigo-900 mr-4">&larr; Back</a>
-            <h2 class="text-2xl font-bold text-gray-800">Add New Employee</h2>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+    <!-- Breadcrumb / Back Navigation -->
+    <nav class="flex mb-8" aria-label="Breadcrumb">
+        <a href="{% url 'web:org_panel' %}" class="flex items-center text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            BACK TO CONTROL PANEL
+        </a>
+    </nav>
+
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Header -->
+        <div class="bg-indigo-900 px-8 py-10 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 mix-blend-multiply opacity-50"></div>
+            <div class="relative z-10">
+                <h1 class="text-3xl font-black text-white tracking-tight leading-tight">Add New Personnel</h1>
+                <p class="text-indigo-100 mt-2 font-medium">Provision new security officers or campus staff into the safety grid.</p>
+            </div>
+            
+            <!-- Decorative icon -->
+            <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
         </div>
 
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
+        <div class="px-8 py-10">
+            <!-- Form Messages -->
+            {% include 'web/includes/messages.html' %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {% for field in form %}
-                <div class="{% if field.name == 'guardian_emails' %}md:col-span-2{% endif %}">
-                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        {{ field.label}}</label>
-                    <div class="mt-1">
-                        {{ field }}
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+
+                <!-- Basic Information Section -->
+                <div>
+                    <h2 class="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 border-b border-indigo-50 pb-2">Employee Identity & Role</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        {% for field in form %}
+                            {% if field.name != 'guardian_emails' %}
+                            <div class="{% if field.name == 'username' or field.name == 'email' %}md:col-span-1{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                                    {{ field.label }}
+                                </label>
+                                
+                                {{ field }}
+                                
+                                {% if field.help_text %}
+                                <p class="mt-2 text-[11px] text-gray-400 font-medium italic opacity-80 leading-relaxed">{{ field.help_text }}</p>
+                                {% endif %}
+                                
+                                {% if field.errors %}
+                                <div class="mt-2 text-xs text-red-600 font-bold bg-red-50 p-2 rounded-lg border border-red-100">
+                                    {{ field.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
                     </div>
-                    {% if field.help_text %}
-                    <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
-                    {% endif %}
-                    {% if field.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {{ field.errors }}
-                    </div>
-                    {% endif %}
                 </div>
-                {% endfor %}
-            </div>
 
-            <div class="pt-4 border-t border-gray-200">
-                <button type="submit"
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    Create Employee
-                </button>
-            </div>
-        </form>
+                <!-- Emergency Configuration Section -->
+                <div>
+                    <h2 class="text-xs font-black text-red-600 uppercase tracking-[0.2em] mb-6 border-b border-red-50 pb-2">Emergency Notification Configuration</h2>
+                    
+                    <div class="space-y-4">
+                        <label for="{{ form.guardian_emails.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                            {{ form.guardian_emails.label }}
+                        </label>
+                        
+                        {{ form.guardian_emails }}
+                        
+                        <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 mt-2">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-gray-500 font-medium leading-relaxed">
+                                Enter the email addresses (separated by commas) of guardians who should be alerted when this person triggers an automated SOS or threat detection event.
+                            </p>
+                        </div>
+
+                        {% if form.guardian_emails.errors %}
+                        <div class="mt-2 text-xs text-red-600 font-bold bg-red-50 p-2 rounded-lg border border-red-100 uppercase tracking-widest">
+                            {{ form.guardian_emails.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Submit Action Area -->
+                <div class="pt-10 border-t border-gray-100 flex flex-col sm:flex-row gap-4">
+                    <button type="submit"
+                        class="flex-1 inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-xs font-black rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-[0.98] uppercase tracking-[0.2em]">
+                        Provision Employee Access
+                    </button>
+                    <a href="{% url 'web:org_panel' %}"
+                        class="inline-flex items-center justify-center px-6 py-2.5 border-2 border-gray-100 text-xs font-black rounded-xl text-gray-500 hover:bg-gray-50 hover:border-gray-200 transition-all uppercase tracking-[0.2em]">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -30,6 +30,11 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f"Welcome back, {user.username}!")
+                
+                # Redirect to 'next' if provided, else home
+                next_url = request.GET.get('next')
+                if next_url:
+                    return redirect(next_url)
                 return redirect('web:home')
             else:
                 messages.error(request, "Invalid username or password.")
@@ -99,7 +104,10 @@ def register_view(request):
                 return redirect('web:org_panel')
 
             except Exception as e:
-                messages.error(request, f"Registration failed: {str(e)}")
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Registration error: {str(e)}", exc_info=True)
+                messages.error(request, "An unexpected error occurred during registration. Please try again or contact support.")
     else:
         # Check if URL has ?token=...
         initial = {}

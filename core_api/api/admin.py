@@ -40,7 +40,24 @@ class OrgRegistrationTokenAdmin(admin.ModelAdmin):
 
 @admin.register(MLServiceConfig)
 class MLServiceConfigAdmin(admin.ModelAdmin):
-    list_display = ('base_url', 'timeout_seconds')
+    list_display = ('name', 'base_url', 'is_active', 'timeout_seconds', 'updated_at')
+    list_filter = ('is_active',)
+    fieldsets = (
+        ('Global Configuration', {
+            'fields': ('name', 'base_url', 'is_active', 'timeout_seconds')
+        }),
+        ('API Endpoint Paths', {
+            'fields': (
+                'health_path', 'violence_path', 'violence_frame_path', 
+                'hand_sos_path', 'lost_child_path', 'severity_path'
+            ),
+            'classes': ('collapse',),
+            'description': 'Advanced: Customize the URI paths used to call the ML service endpoints.'
+        }),
+        ('Feature Capability Toggles', {
+            'fields': ('violence_enabled', 'hand_sos_enabled', 'lost_child_enabled', 'severity_enabled', 'sos_enabled')
+        }),
+    )
 
 @admin.register(MissingPerson)
 class MissingPersonAdmin(admin.ModelAdmin):

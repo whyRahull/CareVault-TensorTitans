@@ -197,3 +197,10 @@ CELERY_BROKER_URL    = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'django-db'   # uses django_celery_results
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+# ---------------------------------------------------------------------------
+# Auth URLs
+# ---------------------------------------------------------------------------
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/home/'
+LOGOUT_REDIRECT_URL = '/'

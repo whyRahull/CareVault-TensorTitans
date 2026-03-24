@@ -13,7 +13,7 @@ class ViolenceVideoDetectView(APIView):
             return Response({'error': 'Video file is required'}, status=400)
 
         config = MLServiceConfig.get_solo()
-        ml_url = f"{config.base_url.rstrip('/')}/api/violence/detect"
+        ml_url = f"{config.base_url.rstrip('/')}{config.violence_path}"
 
         try:
             # We use a larger timeout for full video analysis as it might take time

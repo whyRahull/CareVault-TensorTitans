@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareVault — Hand SOS Dashboard</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0d0f1a;
+            --surface: #161927;
+            --border: #252840;
+            --accent: #e6a817;
+            --accent-dim: rgba(230, 168, 23, .13);
+            --safe: #38a169;
+            --text: #e2e8f0;
+            --muted: #718096;
+            --font: 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 28px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        header .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -.5px;
+        }
+
+        header .logo span {
+            color: var(--accent);
+        }
+
+        .badge {
+            margin-left: auto;
+            padding: 4px 14px;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 600;
+            letter-spacing: .5px;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .badge.safe {
+            background: rgba(56, 161, 105, .15);
+            color: var(--safe);
+            border-color: var(--safe);
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            padding: 24px;
+            max-width: 1320px;
+            margin: auto;
+        }
+
+        .video-card {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .video-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--muted);
+        }
+
+        .dot.live {
+            background: var(--accent);
+            animation: pulse 1.2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .2
+            }
+        }
+
+        #camera-feed {
+            width: 100%;
+            display: block;
+            background: #000;
+        }
+
+        #annotated-frame {
+            width: 100%;
+            display: none;
+            border-top: 1px solid var(--border);
+        }
+
+        /* SOS alert banner */
+        #sos-banner {
+            display: none;
+            padding: 18px 24px;
+            text-align: center;
+            background: var(--accent-dim);
+            border-top: 2px solid var(--accent);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+            animation: sosPulse 1s infinite alternate;
+        }
+
+        @keyframes sosPulse {
+            from {
+                opacity: 1
+            }
+
+            to {
+                opacity: .4
+            }
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .stat-card h3 {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-value.warning {
+            color: var(--accent);
+        }
+
+        .gesture-pill {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: .85rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-weight: 600;
+            transition: background .3s, color .3s;
+        }
+
+        .gesture-pill.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .controls {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .controls h3 {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: .85rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: .9rem;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 12px;
+            padding: 11px;
+            border: none;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+
+        #btn-start {
+            background: var(--accent);
+            color: #111;
+        }
+
+        #btn-stop {
+            background: var(--border);
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .events {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            flex: 1;
+        }
+
+        .events h3 {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        #event-log {
+            list-style: none;
+            max-height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #event-log li {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: .82rem;
+            background: var(--accent-dim);
+            border-left: 3px solid var(--accent);
+        }
+
+        #event-log li.info {
+            background: rgba(56, 161, 105, .1);
+            border-color: var(--safe);
+            color: var(--muted);
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="logo">Care<span>Vault</span></div>
+        <span style="color:var(--muted);font-size:.9rem;">Hand SOS Detection</span>
+        <span id="status-badge" class="badge">● OFFLINE</span>
+    </header>
+
+    <main>
+        <div class="video-card">
+            <div class="video-header">
+                <span class="dot" id="live-dot"></span>
+                <span>Live Camera Feed</span>
+            </div>
+            <video id="camera-feed" autoplay muted playsinline></video>
+            <img id="annotated-frame" alt="Annotated" />
+            <div id="sos-banner"> SOS GESTURE DETECTED — ALERTING CONTACTS</div>
+        </div>
+
+        <div class="panel">
+            <div class="stat-card">
+                <h3>Current Gesture</h3>
+                <div style="margin-top:8px">
+                    <span id="gesture-pill" class="gesture-pill">none</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>SOS Alerts This Session</h3>
+                <div id="sos-count" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Hands Detected</h3>
+                <div id="hands-count" class="stat-value">0</div>
+            </div>
+            <div class="controls">
+                <h3>Stream Settings</h3>
+                <label for="room-input">Camera Room Name</label>
+                <input type="text" id="room-input" value="handsos-room-1" />
+                <button id="btn-start">▶ Start Stream</button>
+                <button id="btn-stop">■ Stop</button>
+            </div>
+            <div class="events">
+                <h3>Event Log</h3>
+                <ul id="event-log"></ul>
+            </div>
+        </div>
+    </main>
+
+    <canvas id="capture-canvas" style="display:none"></canvas>
+    <script>
+        const WS_HOST = location.host;
+        let ws, stream, intervalId, sosCount = 0;
+
+        const video = document.getElementById('camera-feed');
+        const annotated = document.getElementById('annotated-frame');
+        const canvas = document.getElementById('capture-canvas');
+        const ctx = canvas.getContext('2d');
+        const badge = document.getElementById('status-badge');
+        const liveDot = document.getElementById('live-dot');
+        const log = document.getElementById('event-log');
+        const sosBanner = document.getElementById('sos-banner');
+        const sosEl = document.getElementById('sos-count');
+        const handsEl = document.getElementById('hands-count');
+        const gesturePill = document.getElementById('gesture-pill');
+
+        function addEvent(msg, sos = false) {
+            const li = document.createElement('li');
+            if (!sos) li.classList.add('info');
+            li.textContent = `${new Date().toLocaleTimeString()} — ${msg}`;
+            log.prepend(li);
+            if (log.children.length > 50) log.lastChild.remove();
+        }
+
+        document.getElementById('btn-start').addEventListener('click', async () => {
+            const room = document.getElementById('room-input').value.trim() || 'handsos-1';
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            ws = new WebSocket(`ws://${WS_HOST}/ws/stream/${room}/`);
+            ws.onopen = () => {
+                badge.textContent = '● LIVE'; badge.className = 'badge safe';
+                liveDot.className = 'dot live';
+                addEvent('Connected to room: ' + room);
+                intervalId = setInterval(sendFrame, 400);
+            };
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.error) { addEvent('Error: ' + data.error, false); return; }
+                const result = data.result || {};
+
+                gesturePill.textContent = result.gesture || 'none';
+                gesturePill.className = result.sos_detected ? 'gesture-pill active' : 'gesture-pill';
+                handsEl.textContent = result.hands_found ?? 0;
+
+                if (result.annotated_image_b64) {
+                    annotated.src = 'data:image/jpeg;base64,' + result.annotated_image_b64;
+                    annotated.style.display = 'block';
+                }
+                if (result.sos_detected) {
+                    sosCount++;
+                    sosEl.textContent = sosCount;
+                    sosEl.className = 'stat-value warning';
+                    sosBanner.style.display = 'block';
+                    setTimeout(() => sosBanner.style.display = 'none', 3000);
+                    addEvent(`🆘 SOS Gesture "${result.gesture}" — hands: ${result.hands_found}`, true);
+                }
+            };
+            ws.onclose = () => { badge.textContent = '● OFFLINE'; badge.className = 'badge'; liveDot.className = 'dot'; };
+        });
+
+        document.getElementById('btn-stop').addEventListener('click', () => {
+            clearInterval(intervalId); ws && ws.close();
+            stream && stream.getTracks().forEach(t => t.stop());
+            video.srcObject = null;
+        });
+
+        function sendFrame() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            ctx.drawImage(video, 0, 0);
+            canvas.toBlob(blob => {
+                blob.arrayBuffer().then(buf => {
+                    // Send as JSON with type=hand_sos
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const b64 = btoa(String.fromCharCode(...new Uint8Array(reader.result)));
+                        ws.send(JSON.stringify({ type: 'hand_sos', frame_b64: b64 }));
+                    };
+                    reader.readAsArrayBuffer(blob);
+                });
+            }, 'image/jpeg', 0.75);
+        }
+
+        // Simpler: convert to b64 directly
+        function sendFrame() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            ctx.drawImage(video, 0, 0);
+            const b64 = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+            ws.send(JSON.stringify({ type: 'hand_sos', frame_b64: b64 }));
+        }
+    </script>
+</body>
+
+</html>

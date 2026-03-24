@@ -29,6 +29,32 @@ class MLStreamConsumer(AsyncWebsocketConsumer):
             else: self.room_name = 'default'
 
         self.room_group = f'stream_{self.room_name}'
+        
+        @database_sync_to_async
+        def get_cached_cfg():
+            try:
+                cfg = _get_ml_config()
+                return {
+                    'v': cfg.violence_enabled, 
+                    'h': cfg.hand_sos_enabled, 
+                    'l': cfg.lost_child_enabled, 
+                    'url': cfg.base_url.rstrip('/'), 
+                    't': cfg.timeout_seconds,
+                    'v_path': cfg.violence_frame_path,
+                    'h_path': cfg.hand_sos_path,
+                    'l_path': cfg.lost_child_path
+                }
+            except: 
+                return {
+                    'v': True, 'h': True, 'l': True, 
+                    'url': settings.ML_SERVICE_URL.rstrip('/'), 't': 5,
+                    'v_path': '/api/violence/detect_frame',
+                    'h_path': '/api/hand_sos/detect',
+                    'l_path': '/api/lost_child/search'
+                }
+        
+        self.ml_cfg = await get_cached_cfg()
+        
         await self.channel_layer.group_add(self.room_group, self.channel_name)
         await self.accept()
 
@@ -53,17 +79,12 @@ class MLStreamConsumer(AsyncWebsocketConsumer):
                 person_id  = payload.get('person_id')
             except Exception: return
 
-        @database_sync_to_async
-        def get_cfg():
-            cfg = _get_ml_config()
-            return {'v': cfg.violence_enabled, 'h': cfg.hand_sos_enabled, 'l': cfg.lost_child_enabled, 'url': cfg.base_url, 't': cfg.timeout_seconds}
-
-        cfg = await get_cfg()
+        cfg = self.ml_cfg
         url = cfg['url']
         endpoint_map = {
-            'violence': f'{url}/api/violence/detect_frame', 
-            'hand_sos': f'{url}/api/hand_sos/detect', 
-            'lost_child': f'{url}/api/lost_child/search'
+            'violence': f"{url}{cfg['v_path']}", 
+            'hand_sos': f"{url}{cfg['h_path']}", 
+            'lost_child': f"{url}{cfg['l_path']}"
         }
         endpoint = endpoint_map.get(model_type, endpoint_map['violence'])
         if model_type == 'lost_child' and person_id: endpoint = f'{endpoint}?person_id={person_id}'

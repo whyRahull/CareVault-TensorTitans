@@ -2,38 +2,47 @@ from django.db import models
 from django.conf import settings
 
 class MLServiceConfig(models.Model):
-    """Singleton model for ML service settings."""
-    base_url = models.CharField(max_length=255, verbose_name="ML Service Base URL", help_text="http://ml_service:8001")
+    """Configuration for ML service settings and endpoints."""
+    name = models.CharField(max_length=100, default="Primary ML Service")
+    base_url = models.CharField(max_length=255, verbose_name="ML Service Base URL", help_text="http://localhost:8001")
+    is_active = models.BooleanField(default=True, help_text="Is this the active configuration?")
+    
+    # Endpoint Paths
+    health_path = models.CharField(max_length=100, default="/health")
+    violence_path = models.CharField(max_length=100, default="/api/violence/detect")
+    violence_frame_path = models.CharField(max_length=100, default="/api/violence/detect_frame")
+    hand_sos_path = models.CharField(max_length=100, default="/api/hand_sos/detect")
+    lost_child_path = models.CharField(max_length=100, default="/api/lost_child/search")
+    severity_path = models.CharField(max_length=100, default="/api/severity/predict")
+    
     timeout_seconds = models.PositiveIntegerField(default=10)
+    
+    # Feature Toggles
     violence_enabled = models.BooleanField(default=True)
     hand_sos_enabled = models.BooleanField(default=True)
     severity_enabled = models.BooleanField(default=True)
     sos_enabled = models.BooleanField(default=True)
     lost_child_enabled = models.BooleanField(default=True)
+    
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "ML Service Config"
-        verbose_name_plural = "ML Service Config"
+        verbose_name_plural = "ML Service Configs"
+        ordering = ['-is_active', '-updated_at']
 
-    def __str__(self): return f"ML Service Config — {self.base_url}"
+    def __str__(self): return f"{self.name} — {self.base_url} ({'ACTIVE' if self.is_active else 'INACTIVE'})"
 
     def save(self, *args, **kwargs):
-        self.pk = 1
+        if self.is_active:
+            # Rule: only one can be active
+            MLServiceConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs): pass
 
     @classmethod
     def get_solo(cls):
-        obj, _ = cls.objects.get_or_create(
-            pk=1,
-            defaults={
-                "base_url": getattr(settings, "ML_SERVICE_URL", "http://localhost:8001"),
-                "timeout_seconds": 10,
-            },
-        )
-        return obj
+        """Compatibility method for existing code, returns the active config."""
+        return cls.objects.filter(is_active=True).first() or cls.objects.first()
 
 class MissingPerson(models.Model):
     name        = models.CharField(max_length=200)

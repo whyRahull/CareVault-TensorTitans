@@ -14,7 +14,7 @@ class LostChildImageSearchView(APIView):
             return Response({'error': 'Image file is required'}, status=400)
 
         config = MLServiceConfig.get_solo()
-        ml_url = f"{config.base_url.rstrip('/')}/api/lost_child/search"
+        ml_url = f"{config.base_url.rstrip('/')}{config.lost_child_path}"
         if person_id:
             ml_url = f"{ml_url}?person_id={person_id}"
 
